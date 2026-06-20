@@ -1,0 +1,28 @@
+# Entorno virtual
+venv/
+.venv/
+env/
+
+# Python cache
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.pytest_cache/
+
+# Configuración local sensible
+.env
+
+
+
+.idea/
+.vscode/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.swp
+
+
+app/uploads/
+uploads/
