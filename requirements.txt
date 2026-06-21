@@ -25,3 +25,7 @@ google-generativeai>=0.4.0
 # Utilidades
 python-multipart>=0.0.9
 python-dotenv>=1.0.1
+
+
+# Configuración y Validación de datos
+pydantic-settings>=2.2.0

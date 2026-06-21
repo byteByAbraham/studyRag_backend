@@ -1,27 +1,28 @@
 
-import os 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from dotenv import load_dotenv
 
-load_dotenv()
+from app.core.config import settings
 
-PROJECT_NAME = os.getenv("PROJECT_NAME", "StudyRag API")
-VERSION = os.getenv("VERSION", "1.0.0")
-API_V1_STR = os.getenv("API_V1_STR", "/api/v1")
 
-app = FastAPI( title=PROJECT_NAME, 
-            version=VERSION,
+
+
+app = FastAPI( title=settings.PROJECT_NAME, 
+            version=settings.VERSION,
             description="Backend con Motor Rag para la aplicación StudyRag academica a través de una API",
             docs_url = "/docs",
             redoc_url = "/redoc",
-            openapi_url = f"{API_V1_STR}/openapi.json"
+            openapi_url = f"{settings.API_V1_STR}/openapi.json"
             )
+
+
 
 origins = [
     "http://localhost:3000",
     "http://127.0.0.1:3000",
 ]
+
+
 
 app.add_middleware(
     CORSMiddleware,
@@ -31,6 +32,8 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+
+
 @app.get("/", tags=["Root"])
 async def health_check():
     """
@@ -38,9 +41,9 @@ async def health_check():
     
     """
     return {"status": "ok", 
-            "project": PROJECT_NAME, 
-            "version": VERSION,
-            "environment": os.getenv("ENVIRONMENT", "development"),
+            "project": settings.PROJECT_NAME, 
+            "version": settings.VERSION,
+            "environment": settings.ENVIRONMENT,
             "services": {
                 "database": "pending",
                 "vector_db": "pending",
