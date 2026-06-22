@@ -11,7 +11,7 @@ class Base(DeclarativeBase):
 
     id: Any
 
-    @declared_attr.cascading
-    
+    @declared_attr
     def __tablename__(cls) -> str:
+        
         return cls.__name__.lower()
