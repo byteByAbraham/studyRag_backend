@@ -31,3 +31,7 @@ class UserLogin(BaseModel):
     password: str = Field(...)
 
 
+class Token(BaseModel):
+    access_token: str
+    token_type: str = "bearer"
+
