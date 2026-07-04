@@ -1,6 +1,6 @@
 
 from fastapi import Depends, HTTPException, status
-from fastapi.security import OAuth2PasswordBearer
+from fastapi.security import APIKeyHeader
 from jose import jwt, JWTError
 from pydantic import ValidationError
 from sqlalchemy.orm import Session
@@ -10,8 +10,9 @@ from app.models.user import User
 from app.repositories.user_repository import UserRepository
 
 
-oauth2_scheme = OAuth2PasswordBearer(
-    tokenUrl=f"{settings.API_V1_STR}/auth/login"
+oauth2_scheme = APIKeyHeader(
+    name="Authorization",
+    auto_error=False
 )
 
 def get_current_user(db: Session = Depends(get_db), token: str = Depends(oauth2_scheme)) -> User:
@@ -19,6 +20,13 @@ def get_current_user(db: Session = Depends(get_db), token: str = Depends(oauth2_
     Dependencia para validar el token JWT y retornar el usuario autenticado actual.
     Si el token es inválido o el usuario no existe, lanza una excepción 401 Unauthorized.
     """
+
+    if not token:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="No se proporcionó un token de acceso.",
+        )
+
     try:
 
         payload = jwt.decode(
