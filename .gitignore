@@ -26,3 +26,5 @@ __pycache__/
 
 app/uploads/
 uploads/
+
+storage/documents/

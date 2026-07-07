@@ -5,7 +5,10 @@ from sqlalchemy import String, DateTime, Boolean
 from sqlalchemy.orm import Mapped, mapped_column
 from app.db.base_class import Base
 
+from sqlalchemy.orm import relationship
+
 class User(Base):
+    __tablename__ = "users"
 
     """
     Modelo relacional para tabla de usuarios. 
@@ -39,3 +42,6 @@ class User(Base):
         onupdate=lambda: datetime.now(timezone.utc),
         nullable=False
     )
+
+    documents = relationship("Document", back_populates="user", cascade="all, delete-orphan")
+
