@@ -10,7 +10,7 @@ from app.api.deps import get_current_user
 from app.models.user import User
 
 
-router = APIRouter(prefix="/auth", tags=["Autenticación"])
+router = APIRouter()
 
 @router.post("/register", response_model=UserResponse, status_code=status.HTTP_201_CREATED)
 
