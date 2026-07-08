@@ -1,3 +1,5 @@
+import json
+from typing import Generator
 
 from sqlalchemy.orm import Session
 from google import genai
@@ -5,17 +7,18 @@ from app.core.config import settings
 from app.services.search_service import SearchService
 
 class ChatService:
+
     def __init__(self, db: Session):
         self.db = db
         self.client = genai.Client(api_key=settings.GEMINI_API_KEY)
         self.search_service = SearchService(db)
 
-    def answer_question_from_document(self, document_id: str, question: str) -> str:
+    def answer_question_stream(self, document_id: str, question: str) -> Generator[str, None, None]:
         """
-        Responde a una pregunta específica basada en el contenido de un documento PDF previamente cargado y procesado.
-        1. Obtiene los trozos de texto más relevantes desde la Fase 2.
-        2. Construye un prompt con el contexto del documento.
-        3. Genera una respuesta exacta usando Gemini.
+        Genera una respuesta a una pregunta basada en el contenido de un documento, utilizando streaming.
+        1. Obtiene los trozos de texto más relevantes.
+        2. Envía las páginas fuente inmediatamente como metadatos SSE (con acentos nativos).
+        3. Transmite el texto generado por Gemini palabra por palabra.
         """
         relevant_chunks = self.search_service.search_context_for_question(
             document_id=document_id,
@@ -24,8 +27,12 @@ class ChatService:
         )
 
         if not relevant_chunks:
-            return "No se encontró información relevante en el documento para responder a esta pregunta."
+            yield "data: " + json.dumps({'error': 'No se encontró información relevante.'}, ensure_ascii=False) + "\n\n"
+            return
 
+        pages_cited = sorted(list({chunk['page'] for chunk in relevant_chunks}))
+        yield "data: " + json.dumps({'pages_cited': pages_cited}, ensure_ascii=False) + "\n\n"
+        
         context_text = "\n\n".join([
             f"[Fragmento de Página {c['page']}]: {c['content']}" 
             for c in relevant_chunks
@@ -50,9 +57,11 @@ PREGUNTA DEL ESTUDIANTE:
 RESPUESTA INTERACTIVE:
 """
 
-        response = self.client.models.generate_content(
+        response_stream = self.client.models.generate_content_stream(
             model='gemini-2.5-flash',
             contents=prompt,
         )
 
-        return response.text
+        for chunk in response_stream:
+            if chunk.text:
+                yield "data: " + json.dumps({'text': chunk.text}, ensure_ascii=False) + "\n\n"
