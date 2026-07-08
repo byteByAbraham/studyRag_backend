@@ -1,0 +1,22 @@
+
+version: '3.8'
+
+services:
+  db:
+    # Usamos la imagen oficial que ya viene con la extensión pgvector preinstalada
+    image: pgvector/pgvector:pg16
+    container_name: studyrag_postgres_vector
+    restart: always
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: aaGr16
+      POSTGRES_DB: studyrag_db
+    ports:
+      # Mapeamos el puerto 5432 del contenedor al puerto 5432 de tu máquina
+      - "5432:5432"
+    volumes:
+      # Creamos un volumen local para que tus datos no se borren al apagar el contenedor
+      - postgres_vector_data:/var/lib/postgresql/data
+
+volumes:
+  postgres_vector_data:
