@@ -1,3 +1,6 @@
+
+from fastapi.responses import StreamingResponse
+
 from fastapi import APIRouter, Depends, UploadFile, File, HTTPException, status
 from sqlalchemy.orm import Session
 
@@ -90,7 +93,7 @@ def test_semantic_search(
     current_user: User = Depends(get_current_user) 
 ):
     """
-    Endpoint de prueba para la Fase 2 (Búsqueda Semántica).
+    Endpoint de prueba (Búsqueda Semántica).
     Recibe una pregunta y el ID de un PDF, y retorna los fragmentos más relevantes de la base de datos.
     """
     try:
@@ -113,33 +116,32 @@ def test_semantic_search(
         )
     
 
-@router.post("/query", response_model=str)
+@router.post("/query")
 def ask_question_to_document(
     query_data: SemanticSearchQuery,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
     """
-    Endpoint definitivo del Pipeline RAG.
-    Recibe el ID de un PDF y una pregunta, busca los fragmentos relevantes
-    y le pide a Gemini que redacte una respuesta inteligente basada en el texto.
+    Endpoint definitivo del Pipeline RAG con soporte para Streaming y Citas.
+    Retorna un flujo de eventos (SSE) que envía primero las páginas citadas 
+    y luego la respuesta de la IA palabra por palabra.
     """
     try:
+
         chat_service = ChatService(db)
-        
-        answer = chat_service.answer_question_from_document(
+        stream_generator = chat_service.answer_question_stream(
             document_id=query_data.document_id,
             question=query_data.question
         )
-        
-        return answer
+        return StreamingResponse(stream_generator, media_type="text/event-stream")
         
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
+    
     except Exception as e:
         raise HTTPException(
             status_code=500, 
-            detail=f"Error en la generación de respuesta de la IA: {str(e)}"
+            detail=f"Error en la generación de respuesta por streaming: {str(e)}"
         )
-    
     

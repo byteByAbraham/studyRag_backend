@@ -63,7 +63,7 @@ class DocumentProcessorService:
 
     def process_pdf(self, file_path: str) -> List[Dict[str, Any]]:
         """
-        Método Orquestador: Coordina el flujo completo de la Fase 1.
+        Método Orquestador: Coordina el flujo completo de procesamiento del PDF.
         Recibe la ruta del archivo y devuelve la lista estructurada con los fragmentos y sus páginas.
         """
         extracted_pages = self.extract_text_from_pdf(file_path)
