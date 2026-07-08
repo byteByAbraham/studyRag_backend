@@ -13,6 +13,7 @@ from app.services.embedding import EmbeddingService
 
 from app.services.search_service import SearchService
 from app.schemas.document import SemanticSearchQuery
+from app.services.chat_service import ChatService
 
 router = APIRouter()
 
@@ -110,3 +111,35 @@ def test_semantic_search(
             status_code=500, 
             detail=f"Error en el pipeline de búsqueda semántica: {str(e)}"
         )
+    
+
+@router.post("/query", response_model=str)
+def ask_question_to_document(
+    query_data: SemanticSearchQuery,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    """
+    Endpoint definitivo del Pipeline RAG.
+    Recibe el ID de un PDF y una pregunta, busca los fragmentos relevantes
+    y le pide a Gemini que redacte una respuesta inteligente basada en el texto.
+    """
+    try:
+        chat_service = ChatService(db)
+        
+        answer = chat_service.answer_question_from_document(
+            document_id=query_data.document_id,
+            question=query_data.question
+        )
+        
+        return answer
+        
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    except Exception as e:
+        raise HTTPException(
+            status_code=500, 
+            detail=f"Error en la generación de respuesta de la IA: {str(e)}"
+        )
+    
+    
