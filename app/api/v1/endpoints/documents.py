@@ -9,7 +9,10 @@ from app.models.document_chunk import DocumentChunk
 from app.schemas.document import DocumentResponse
 from app.services.document import DocumentService                
 from app.services.document_processor import DocumentProcessorService 
-from app.services.embedding import EmbeddingService               
+from app.services.embedding import EmbeddingService       
+
+from app.services.search_service import SearchService
+from app.schemas.document import SemanticSearchQuery
 
 router = APIRouter()
 
@@ -77,3 +80,33 @@ async def upload_file(
     
     
     return db_document
+
+
+@router.post("/search", response_model=list)
+def test_semantic_search(
+    query_data: SemanticSearchQuery,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user) 
+):
+    """
+    Endpoint de prueba para la Fase 2 (Búsqueda Semántica).
+    Recibe una pregunta y el ID de un PDF, y retorna los fragmentos más relevantes de la base de datos.
+    """
+    try:
+        search_service = SearchService(db)
+        
+        relevant_chunks = search_service.search_context_for_question(
+            document_id=query_data.document_id,
+            question=query_data.question,
+            limit=3 
+        )
+        
+        return relevant_chunks
+        
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    except Exception as e:
+        raise HTTPException(
+            status_code=500, 
+            detail=f"Error en el pipeline de búsqueda semántica: {str(e)}"
+        )

@@ -1,5 +1,5 @@
 
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel, ConfigDict, Field
 from datetime import datetime
 from uuid import UUID
 
@@ -18,3 +18,7 @@ class DocumentResponse(DocumentBase):
     user_id: UUID
 
     model_config = ConfigDict(from_attributes=True)
+
+class SemanticSearchQuery(BaseModel):
+    document_id: str = Field(..., description="El identificador único del documento PDF")
+    question: str = Field(..., description="La pregunta o duda que deseas buscar en el texto")
