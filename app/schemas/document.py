@@ -2,6 +2,7 @@
 from pydantic import BaseModel, ConfigDict, Field
 from datetime import datetime
 from uuid import UUID
+from typing import Optional
 
 class DocumentBase(BaseModel):
     filename: str
@@ -10,13 +11,14 @@ class DocumentBase(BaseModel):
 class DocumentCreate(DocumentBase):
     storage_path: str
     user_id: UUID
+    room_id: Optional[str] = None
 
 
 class DocumentResponse(DocumentBase):
     id: str  
     created_at: datetime
     user_id: UUID
-
+    room_id: Optional[str] = None
     model_config = ConfigDict(from_attributes=True)
 
 class SemanticSearchQuery(BaseModel):
