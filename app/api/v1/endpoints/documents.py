@@ -93,18 +93,31 @@ def test_semantic_search(
     current_user: User = Depends(get_current_user) 
 ):
     """
-    Endpoint de prueba (Búsqueda Semántica).
-    Recibe una pregunta y el ID de un PDF, y retorna los fragmentos más relevantes de la base de datos.
+    Endpoint protegido (Búsqueda Semántica).
+    Verifica que el usuario sea el dueño del documento o sea Profesor (Admin).
     """
+    from app.models.document import Document
+    db_document = db.query(Document).filter(Document.id == query_data.document_id).first()
+    
+    if not db_document:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, 
+            detail="El documento solicitado no existe."
+        )
+    
+    if not current_user.is_admin and str(db_document.user_id) != str(current_user.id):
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="No tienes permiso para consultar este documento. Los apuntes son privados."
+        )
+
     try:
         search_service = SearchService(db)
-        
         relevant_chunks = search_service.search_context_for_question(
             document_id=query_data.document_id,
             question=query_data.question,
             limit=3 
         )
-        
         return relevant_chunks
         
     except ValueError as e:
@@ -123,12 +136,25 @@ def ask_question_to_document(
     current_user: User = Depends(get_current_user)
 ):
     """
-    Endpoint definitivo del Pipeline RAG con soporte para Streaming y Citas.
-    Retorna un flujo de eventos (SSE) que envía primero las páginas citadas 
-    y luego la respuesta de la IA palabra por palabra.
+    Endpoint definitivo del Pipeline RAG con soporte para Streaming, Citas y Roles.
+    Verifica seguridad por rol antes de iniciar el streaming con la IA.
     """
-    try:
+    from app.models.document import Document
+    db_document = db.query(Document).filter(Document.id == query_data.document_id).first()
+    
+    if not db_document:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, 
+            detail="El documento solicitado no existe."
+        )
+    
+    if not current_user.is_admin and str(db_document.user_id) != str(current_user.id):
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="No tienes permiso para realizar consultas sobre este documento."
+        )
 
+    try:
         chat_service = ChatService(db)
         stream_generator = chat_service.answer_question_stream(
             document_id=query_data.document_id,
@@ -138,10 +164,8 @@ def ask_question_to_document(
         
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
-    
     except Exception as e:
         raise HTTPException(
             status_code=500, 
             detail=f"Error en la generación de respuesta por streaming: {str(e)}"
         )
-    
