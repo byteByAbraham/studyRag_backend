@@ -65,3 +65,4 @@ RESPUESTA INTERACTIVE:
         for chunk in response_stream:
             if chunk.text:
                 yield "data: " + json.dumps({'text': chunk.text}, ensure_ascii=False) + "\n\n"
+                

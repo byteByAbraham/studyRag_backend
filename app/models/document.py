@@ -18,7 +18,8 @@ class Document(Base):
 
 
     user_id = Column(UUID(as_uuid=True), ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
-
+    room_id = Column(String(36), ForeignKey("study_rooms.id", ondelete="CASCADE"), nullable=True)
     user = relationship("User", back_populates="documents")
+    room = relationship("StudyRoom", backref="documents")
 
     chunks = relationship("DocumentChunk", back_populates="document", cascade="all, delete-orphan")
