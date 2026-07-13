@@ -46,9 +46,8 @@ def get_current_user(db: Session = Depends(get_db), token: str = Depends(oauth2_
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="El token de acceso ha expirado o es inválido.",
         )
-        
-    user = UserRepository.get_by_email(db, email=user_id) 
-    user = db.query(User).filter(User.id == user_id).first()
+    
+    user = UserRepository.get_by_id(db, user_id=user_id)
     
     if not user:
         raise HTTPException(

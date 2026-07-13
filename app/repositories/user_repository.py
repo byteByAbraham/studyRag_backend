@@ -1,15 +1,13 @@
-
 from sqlalchemy.orm import Session
 from app.models.user import User
 from app.schemas.user import UserCreate
 from app.core.security import get_password_hash
+import uuid
 
 class UserRepository:
-
     """
     Esta clase esta encargada de interactuar con la base de datos para realizar todas las operaciones relacionadas con los usuarios.
     """
-
 
     @staticmethod
     def get_by_email(db: Session, email: str) -> User | None:
@@ -17,6 +15,13 @@ class UserRepository:
         Se busca un usuario en la base de datos utilizando su correo electrónico.
         """
         return db.query(User).filter(User.email == email).first()
+
+    @staticmethod
+    def get_by_id(db: Session, user_id: str) -> User | None:
+        """
+        Se busca un usuario en la base de datos utilizando su ID único.
+        """
+        return db.query(User).filter(User.id == user_id).first()
     
     @staticmethod
     def create(db: Session, user_in: UserCreate) -> User:
@@ -30,8 +35,23 @@ class UserRepository:
             is_admin=False,
             is_active=True
         )
-        
+        db.add(db_user)
+        db.commit()
+        db.refresh(db_user)
+        return db_user
 
+    @staticmethod
+    def create_oauth_user(db: Session, email: str, full_name: str) -> User:
+        """
+        Crea un usuario autenticado por un proveedor externo (Google) sin contraseña tradicional.
+        """
+        db_user = User(
+            email=email,
+            hashed_password="",
+            full_name=full_name,
+            is_admin=False,
+            is_active=True
+        )
         db.add(db_user)
         db.commit()
         db.refresh(db_user)

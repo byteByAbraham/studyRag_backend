@@ -8,8 +8,7 @@ class Settings(BaseSettings):
         env_file_encoding="utf-8", 
         extra="ignore"
     )
-
-
+    
 
     PROJECT_NAME: str = "StudyRAG API"
     VERSION: str = "1.0.0"
@@ -28,6 +27,8 @@ class Settings(BaseSettings):
     POSTGRES_PORT: int = 5432
 
     GEMINI_API_KEY: str = ""
+
+    GOOGLE_CLIENT_ID: str = ""
 
 
     @property
